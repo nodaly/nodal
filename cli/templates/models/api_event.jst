@@ -1,0 +1,24 @@
+'use strict';
+
+const Nodal = require('nodal');
+const Queue = require('bull');
+const redisUrl = require('../../config/redis');
+
+class ApiEvent extends Nodal.Model {
+
+  static log(eventData) {
+    
+    const eventsQueue = Queue('api_events', redisUrl);
+
+    const options = {
+      removeOnComplete: true,
+      removeOnFail: true,
+    };
+    eventsQueue.add(eventData, options);
+  }
+}
+
+ApiEvent.setDatabase(Nodal.require('db/main.js'));
+ApiEvent.setSchema(Nodal.my.Schema.models.ApiEvent);
+
+module.exports = ApiEvent;

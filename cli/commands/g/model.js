@@ -48,6 +48,13 @@ function generateAccessTokenDefinition() {
   )();
 };
 
+function generateApiEventDefinition() {
+  return dot.template(
+    fs.readFileSync(__dirname + '/../../templates/models/api_event.jst').toString(),
+    templateSettings
+  )();
+};
+
 function convertArgListToPropertyList(argList) {
 
   // Instantiate Database so we can get access to the Adapater types
@@ -133,6 +140,12 @@ class GenerateModelCommand extends Command {
         'expires_at:datetime',
         'ip_address:string'
       ];
+    } else if (params.vflags.hasOwnProperty('api_event')) {
+      params.args = [
+        'ApiEvent',
+        'date:datetime',
+        'meta:json',
+      ];
     }
 
     if (!params.args.length) {
@@ -164,6 +177,10 @@ class GenerateModelCommand extends Command {
 
       fs.writeFileSync(createPath, generateAccessTokenDefinition());
 
+    } else if (params.vflags.hasOwnProperty('api_event')) {
+
+      fs.writeFileSync(createPath, generateApiEventDefinition());
+
     } else {
 
       fs.writeFileSync(createPath, generateModelDefinition(modelName));
@@ -188,6 +205,25 @@ class GenerateModelCommand extends Command {
 
         let spawn = require('cross-spawn-async');
         let child = spawn('npm',  ['install', 'bcryptjs', '--save'], {cwd: process.cwd(), stdio: 'inherit'});
+
+        child.on('exit', function() {
+
+          child && child.kill();
+          callback(null);
+
+        });
+
+        return;
+
+      }
+
+      if (params.vflags.hasOwnProperty('api_event')) {
+
+        console.log('Installing additional packages in this directory...');
+        console.log('');
+
+        let spawn = require('cross-spawn-async');
+        let child = spawn('npm',  ['install', 'bull', '--save'], {cwd: process.cwd(), stdio: 'inherit'});
 
         child.on('exit', function() {
 
